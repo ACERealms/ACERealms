@@ -335,10 +335,6 @@ namespace ACE.Server.Factories
             }
             else
             {
-                // No Olthoi Support
-                return CreateResult.InvalidSkillRequested;
-
-                /*
                 if (player.CharacterTitleId > 0)
                     player.AddTitle((uint)player.CharacterTitleId.Value, true);
 
@@ -350,7 +346,6 @@ namespace ACE.Server.Factories
                         player.HandleActionAddSpellFavorite((uint)spell.Key, i++, 0);
                     }
                 }
-                */
             }
 
             player.Name = characterCreateInfo.Name;
@@ -358,16 +353,15 @@ namespace ACE.Server.Factories
 
 
             // Index used to determine the starting location
-            /*
             var startArea = characterCreateInfo.StartArea;
 
             var starterArea = DatManager.PortalDat.CharGen.StarterAreas[(int)startArea];
 
             player.Location = new Position(starterArea.Locations[0].ObjCellID,
                 starterArea.Locations[0].Frame.Origin.X, starterArea.Locations[0].Frame.Origin.Y, starterArea.Locations[0].Frame.Origin.Z,
-                starterArea.Locations[0].Frame.Orientation.X, starterArea.Locations[0].Frame.Orientation.Y, starterArea.Locations[0].Frame.Orientation.Z, starterArea.Locations[0].Frame.Orientation.W);
+                starterArea.Locations[0].Frame.Orientation.X, starterArea.Locations[0].Frame.Orientation.Y, starterArea.Locations[0].Frame.Orientation.Z, starterArea.Locations[0].Frame.Orientation.W, 0);
 
-            var instantiation = new Position(0xA9B40019, 84, 7.1f, 94, 0, 0, -0.0784591f, 0.996917f); // ultimate fallback.
+            var instantiation = new Position(0xA9B40019, 84, 7.1f, 94, 0, 0, -0.0784591f, 0.996917f, 0); // ultimate fallback.
             var spellFreeRide = new Database.Models.World.Spell();
             switch (starterArea.Name)
             {
@@ -390,17 +384,15 @@ namespace ACE.Server.Factories
                     break;
             }
             if (spellFreeRide != null && spellFreeRide.Name != "")
-                instantiation = new Position(spellFreeRide.PositionObjCellId.Value, spellFreeRide.PositionOriginX.Value, spellFreeRide.PositionOriginY.Value, spellFreeRide.PositionOriginZ.Value, spellFreeRide.PositionAnglesX.Value, spellFreeRide.PositionAnglesY.Value, spellFreeRide.PositionAnglesZ.Value, spellFreeRide.PositionAnglesW.Value);
-            */
+                instantiation = new Position(spellFreeRide.PositionObjCellId.Value, spellFreeRide.PositionOriginX.Value, spellFreeRide.PositionOriginY.Value, spellFreeRide.PositionOriginZ.Value, spellFreeRide.PositionAnglesX.Value, spellFreeRide.PositionAnglesY.Value, spellFreeRide.PositionAnglesZ.Value, spellFreeRide.PositionAnglesW.Value, 0);
+
+            player.Instantiation = new Position(instantiation);
 
             if (!player.IsOlthoiPlayer)
             {
-                player.Location = new Position(0x8903012E, 87.738312f, -47.704556f, .005f, 0.0f, 0.0f, -0.926821f, 0.375504f, accountId);
-                player.Instantiation = new Position(player.Location);
                 player.Sanctuary = new Position(player.Location);
                 player.SetProperty(PropertyBool.RecallsDisabled, true);
 
-                /*
                 if (PropertyManager.GetBool("pk_server").Item)
                     player.SetProperty(PropertyInt.PlayerKillerStatus, (int)PlayerKillerStatus.PK);
                 else if (PropertyManager.GetBool("pkl_server").Item)
@@ -411,7 +403,6 @@ namespace ACE.Server.Factories
                     player.SetProperty(PropertyFloat.MinimumTimeSincePk, -PropertyManager.GetDouble("pk_new_character_grace_period").Item);
                     player.SetProperty(PropertyInt.PlayerKillerStatus, (int)PlayerKillerStatus.NPK);
                 }
-                */
             }
 
             if (player is Sentinel || player is Admin)
@@ -670,3 +661,4 @@ namespace ACE.Server.Factories
         }
     }
 }
+
