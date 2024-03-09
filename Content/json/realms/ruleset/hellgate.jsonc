@@ -1,0 +1,18 @@
+{
+  "name": "Hellgate",
+  "type": "Ruleset",
+    "properties": {
+        "Description": ".",
+        "RulesetStampVendorCategory": 1,
+        "IsFullLootOnDeath": true,
+        "ExperienceMultiplierAll": 2,
+        "CreatureSpawnMultiplier": 2,
+        "IsNeutralZone": true,
+        "HasRecalls": false,
+        "CreatureRespawnDuration": {
+            "low": 30.0,
+            "high": 120.0,
+            "reroll": "landblock"
+        }
+    }
+}
