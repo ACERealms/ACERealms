@@ -34,64 +34,50 @@ namespace ACE.Server.Command.Handlers
             session.Network.EnqueueSend(positionMessage);
         }
 
-        [CommandHandler("zoneinfo", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Lists all properties for the current realm.")]
+        [CommandHandler("zoneinfo", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Lists all properties for the current realm.")]
         public static void HandleZoneInfo(Session session, params string[] parameters)
         {
             session.Network.EnqueueSend(new GameMessageSystemChat($"\n{session.Player.CurrentLandblock.RealmRuleset.DebugOutputString()}", ChatMessageType.System));
         }
 
-        [CommandHandler("exitinstance", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
+        [CommandHandler("exitinstance", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
         public static void HandleExitInstance(Session session, params string[] parameters)
         {
             session.Player.ExitInstance();
         }
 
-        [CommandHandler("exitinst", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
+        [CommandHandler("exitinst", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
         public static void HandleExitInst(Session session, params string[] parameters)
         {
             session.Player.ExitInstance();
         }
 
 
-        [CommandHandler("exiti", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
+        [CommandHandler("exiti", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
         public static void HandleExitI(Session session, params string[] parameters)
         {
             session.Player.ExitInstance();
         }
 
-        [CommandHandler("leaveinstance", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
+        [CommandHandler("leaveinstance", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
         public static void HandleLeaveInstance(Session session, params string[] parameters)
         {
             session.Player.ExitInstance();
         }
 
-        [CommandHandler("leaveinst", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
+        [CommandHandler("leaveinst", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
         public static void HandleLeaveInst(Session session, params string[] parameters)
         {
             session.Player.ExitInstance();
         }
 
-        [CommandHandler("leavei", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
+        [CommandHandler("leavei", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Leaves the current instance, if the player is currently in one.")]
         public static void HandleLeaveI(Session session, params string[] parameters)
         {
             session.Player.ExitInstance();
         }
-
-        [CommandHandler("hideout", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, "Recalls to your hideout.")]
-        public static void HandleHideout(Session session, params string[] parameters)
-        {
-            if (session?.Player?.HomeRealm == null)
-                return;
-            if (!Managers.RealmManager.GetRealm(session.Player.HomeRealm).StandardRules.GetProperty(RealmPropertyBool.HideoutEnabled))
-            {
-                session.Network.EnqueueSend(new GameMessageSystemChat($"Your home realm has not enabled hideouts.", ChatMessageType.Broadcast));
-                return;
-            }
-            
-            session.Player.HandleActionTeleToHideout();
-        }
-
-        [CommandHandler("rebuff", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, 0,
+      
+        [CommandHandler("rebuff", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, 0,
             "Buffs you with all beneficial spells. Only usable in certain realms.")]
         public static void HandleRebuff(Session session, params string[] parameters)
         {
@@ -113,71 +99,5 @@ namespace ACE.Server.Command.Handlers
             player.CreateSentinelBuffPlayers(new Player[] { player }, true);
         }
 
-        [CommandHandler("duels", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, 0,
-         "Recalls you to the duel staging area.")]
-        public static void HandleRecallDuels(Session session, params string[] parameters)
-        {
-            if (RealmManager.DuelRealm == null)
-                return;
-            var player = session.Player;
-            if (!player.ValidatePlayerRealmPosition(DuelRealmHelpers.GetDuelingAreaDrop()))
-                return;
-
-            if (player.PKTimerActive)
-            {
-                session.Network.EnqueueSend(new GameEventWeenieError(session, WeenieError.YouHaveBeenInPKBattleTooRecently));
-                return;
-            }
-
-            if (player.RecallsDisabled)
-            {
-                session.Network.EnqueueSend(new GameEventWeenieError(session, WeenieError.ExitTrainingAcademyToUseCommand));
-                return;
-            }
-
-            if (player.TooBusyToRecall)
-            {
-                session.Network.EnqueueSend(new GameEventWeenieError(session, WeenieError.YoureTooBusy));
-                return;
-            }
-
-            if (player.CombatMode != CombatMode.NonCombat)
-            {
-                // this should be handled by a different thing, probably a function that forces player into peacemode
-                var updateCombatMode = new GameMessagePrivateUpdatePropertyInt(player, PropertyInt.CombatMode, (int)CombatMode.NonCombat);
-                player.SetCombatMode(CombatMode.NonCombat);
-                session.Network.EnqueueSend(updateCombatMode);
-            }
-
-            player.EnqueueBroadcast(new GameMessageSystemChat($"{player.Name} is recalling to the duel staging area.", ChatMessageType.Recall), Player.LocalBroadcastRange, ChatMessageType.Recall);
-
-            player.SendMotionAsCommands(MotionCommand.MarketplaceRecall, MotionStance.NonCombat);
-
-            var startPos = new Position(player.Location);
-
-            // TODO: (OptimShi): Actual animation length is longer than in retail. 18.4s
-            // float mpAnimationLength = MotionTable.GetAnimationLength((uint)MotionTableId, MotionCommand.MarketplaceRecall);
-            // mpChain.AddDelaySeconds(mpAnimationLength);
-            ActionChain mpChain = new ActionChain();
-            mpChain.AddDelaySeconds(5);
-
-            // Then do teleport
-            player.IsBusy = true;
-            mpChain.AddAction(player, () =>
-            {
-                player.IsBusy = false;
-                var endPos = new Position(player.Location);
-                if (startPos.SquaredDistanceTo(endPos) > Player.RecallMoveThresholdSq)
-                {
-                    session.Network.EnqueueSend(new GameEventWeenieError(session, WeenieError.YouHaveMovedTooFar));
-                    return;
-                }
-
-                player.Teleport(DuelRealmHelpers.GetDuelingAreaDrop());
-            });
-
-            // Set the chain to run
-            mpChain.EnqueueChain();
-        }
     }
 }
