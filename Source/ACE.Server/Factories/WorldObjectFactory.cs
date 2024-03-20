@@ -50,15 +50,15 @@ namespace ACE.Server.Factories
                 case WeenieType.PKModifier:
                     return new PKModifier(weenie, guid);
                 case WeenieType.Cow:
-                    return new Cow(weenie, guid, ruleset);
+                    return new Cow(weenie, guid);
                 case WeenieType.Creature:
-                    return new Creature(weenie, guid, ruleset);
+                    return new Creature(weenie, guid);
                 case WeenieType.Container:
                     return new Container(weenie, guid);
                 case WeenieType.Scroll:
                     return new Scroll(weenie, guid);
                 case WeenieType.Vendor:
-                    return new Vendor(weenie, guid, ruleset);
+                    return new Vendor(weenie, guid);
                 case WeenieType.Coin:
                     return new Coin(weenie, guid);
                 case WeenieType.Key:
@@ -70,7 +70,7 @@ namespace ACE.Server.Factories
                 case WeenieType.Game:
                     return new Game(weenie, guid);
                 case WeenieType.GamePiece:
-                    return new GamePiece(weenie, guid, ruleset);
+                    return new GamePiece(weenie, guid);
                 case WeenieType.AllegianceBindstone:
                     return new Bindstone(weenie, guid);
                 case WeenieType.Clothing:
@@ -128,9 +128,9 @@ namespace ACE.Server.Factories
                 case WeenieType.PetDevice:
                     return new PetDevice(weenie, guid);
                 case WeenieType.Pet:
-                    return new Pet(weenie, guid, ruleset);
+                    return new Pet(weenie, guid);
                 case WeenieType.CombatPet:
-                    return new CombatPet(weenie, guid, ruleset);
+                    return new CombatPet(weenie, guid);
                 case WeenieType.Allegiance:
                     return new Allegiance(weenie, guid);
                 case WeenieType.AugmentationDevice:

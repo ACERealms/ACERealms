@@ -355,12 +355,11 @@
 
   <ItemGroup>
     <Compile Remove="Factories\Entity\Mutations\**" />
+    <Compile Remove="Realms\Constants\**" />
     <EmbeddedResource Remove="Factories\Entity\Mutations\**" />
+    <EmbeddedResource Remove="Realms\Constants\**" />
     <None Remove="Factories\Entity\Mutations\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Realms\Constants\" />
+    <None Remove="Realms\Constants\**" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

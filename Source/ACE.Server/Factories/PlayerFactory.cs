@@ -39,7 +39,7 @@ namespace ACE.Server.Factories
             else if (weenieType == WeenieType.Sentinel)
                 player = new Sentinel(weenie, guid, accountId);
             else
-                player = new Player(weenie, guid, accountId, RealmManager.DefaultRuleset);
+                player = new Player(weenie, guid, accountId);
 
             player.SetProperty(PropertyInt.HeritageGroup, (int)characterCreateInfo.Heritage);
             player.SetProperty(PropertyString.HeritageGroup, heritageGroup.Name);
