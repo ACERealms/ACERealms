@@ -357,11 +357,16 @@ namespace ACE.Server.Factories
 
             var starterArea = DatManager.PortalDat.CharGen.StarterAreas[(int)startArea];
 
+            var serverBaseRealm = RealmManager.ServerBaseRealm;
+            var instance = serverBaseRealm.StandardRules.GetDefaultInstanceID();
+
+            player.HomeRealm = serverBaseRealm.Realm.Id;
+
             player.Location = new Position(starterArea.Locations[0].ObjCellID,
                 starterArea.Locations[0].Frame.Origin.X, starterArea.Locations[0].Frame.Origin.Y, starterArea.Locations[0].Frame.Origin.Z,
-                starterArea.Locations[0].Frame.Orientation.X, starterArea.Locations[0].Frame.Orientation.Y, starterArea.Locations[0].Frame.Orientation.Z, starterArea.Locations[0].Frame.Orientation.W, 0);
+                starterArea.Locations[0].Frame.Orientation.X, starterArea.Locations[0].Frame.Orientation.Y, starterArea.Locations[0].Frame.Orientation.Z, starterArea.Locations[0].Frame.Orientation.W, instance);
 
-            var instantiation = new Position(0xA9B40019, 84, 7.1f, 94, 0, 0, -0.0784591f, 0.996917f, 0); // ultimate fallback.
+            var instantiation = new Position(0xA9B40019, 84, 7.1f, 94, 0, 0, -0.0784591f, 0.996917f, instance); // ultimate fallback.
             var spellFreeRide = new Database.Models.World.Spell();
             switch (starterArea.Name)
             {
@@ -384,21 +389,22 @@ namespace ACE.Server.Factories
                     break;
             }
             if (spellFreeRide != null && spellFreeRide.Name != "")
-                instantiation = new Position(spellFreeRide.PositionObjCellId.Value, spellFreeRide.PositionOriginX.Value, spellFreeRide.PositionOriginY.Value, spellFreeRide.PositionOriginZ.Value, spellFreeRide.PositionAnglesX.Value, spellFreeRide.PositionAnglesY.Value, spellFreeRide.PositionAnglesZ.Value, spellFreeRide.PositionAnglesW.Value, 0);
+                instantiation = new Position(spellFreeRide.PositionObjCellId.Value, spellFreeRide.PositionOriginX.Value, spellFreeRide.PositionOriginY.Value, spellFreeRide.PositionOriginZ.Value, spellFreeRide.PositionAnglesX.Value, spellFreeRide.PositionAnglesY.Value, spellFreeRide.PositionAnglesZ.Value, spellFreeRide.PositionAnglesW.Value, instance);
 
             player.Instantiation = new Position(instantiation);
 
             if (!player.IsOlthoiPlayer)
             {
+                var isPkOnly = serverBaseRealm.StandardRules.GetProperty(RealmPropertyBool.IsPKOnly);
                 player.Sanctuary = new Position(player.Location);
                 player.SetProperty(PropertyBool.RecallsDisabled, true);
 
-                if (PropertyManager.GetBool("pk_server").Item)
+                if (isPkOnly)
                     player.SetProperty(PropertyInt.PlayerKillerStatus, (int)PlayerKillerStatus.PK);
                 else if (PropertyManager.GetBool("pkl_server").Item)
                     player.SetProperty(PropertyInt.PlayerKillerStatus, (int)PlayerKillerStatus.NPK);
 
-                if ((PropertyManager.GetBool("pk_server").Item || PropertyManager.GetBool("pkl_server").Item) && PropertyManager.GetBool("pk_server_safe_training_academy").Item)
+                if ((isPkOnly || PropertyManager.GetBool("pkl_server").Item) && PropertyManager.GetBool("pk_server_safe_training_academy").Item)
                 {
                     player.SetProperty(PropertyFloat.MinimumTimeSincePk, -PropertyManager.GetDouble("pk_new_character_grace_period").Item);
                     player.SetProperty(PropertyInt.PlayerKillerStatus, (int)PlayerKillerStatus.NPK);

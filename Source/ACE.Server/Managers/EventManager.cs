@@ -99,7 +99,7 @@ namespace ACE.Server.Managers
 
             if (eventName.Equals("EventIsPKWorld", StringComparison.OrdinalIgnoreCase)) // special event
             {
-                var serverPkState = PropertyManager.GetBool("pk_server").Item;
+                var serverPkState = source.RealmRuleset.GetProperty(ACE.Entity.Enum.Properties.RealmPropertyBool.IsPKOnly);
 
                 return serverPkState;
             }
@@ -142,13 +142,13 @@ namespace ACE.Server.Managers
             return Events.ContainsKey(eventName);
         }
 
-        public static GameEventState GetEventStatus(string e)
+        public static GameEventState GetEventStatus(string e, WorldObject source)
         {
             var eventName = GetEventName(e);
 
             if (eventName.Equals("EventIsPKWorld", StringComparison.OrdinalIgnoreCase)) // special event
             {
-                if (PropertyManager.GetBool("pk_server").Item)
+                if (source.RealmRuleset.GetProperty(ACE.Entity.Enum.Properties.RealmPropertyBool.IsPKOnly))
                     return GameEventState.On;
                 else
                     return GameEventState.Off;

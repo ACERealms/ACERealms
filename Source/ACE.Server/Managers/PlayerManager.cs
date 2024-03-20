@@ -21,6 +21,7 @@ using ACE.Server.Network.GameMessages.Messages;
 using ACE.Server.WorldObjects;
 
 using Biota = ACE.Entity.Models.Biota;
+using ACE.Server.Realms;
 
 namespace ACE.Server.Managers
 {

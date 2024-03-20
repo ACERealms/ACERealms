@@ -2774,7 +2774,7 @@ namespace ACE.Server.Command.Handlers
                 case "status":
                     if (eventName != "all" && eventName != "")
                     {
-                        CommandHandlerHelper.WriteOutputInfo(session, $"Event {eventName} - GameEventState.{EventManager.GetEventStatus(eventName)}", ChatMessageType.Broadcast);
+                        CommandHandlerHelper.WriteOutputInfo(session, $"Event {eventName} - GameEventState.{EventManager.GetEventStatus(eventName, session.Player)}", ChatMessageType.Broadcast);
                     }
                     break;
                 default:
@@ -4326,7 +4326,8 @@ namespace ACE.Server.Command.Handlers
 
                     if (parameters[0] == "pk_server" || parameters[0] == "pkl_server")
                     {
-                        PlayerManager.UpdatePKStatusForAllPlayers(parameters[0], boolVal);
+                        // Not supported for ACERealms.
+                        //PlayerManager.UpdatePKStatusForAllPlayers(parameters[0], boolVal);
                     }
                 }
                 else

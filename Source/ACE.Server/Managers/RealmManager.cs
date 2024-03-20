@@ -33,6 +33,8 @@ namespace ACE.Server.Managers
         private static readonly Dictionary<ReservedRealm, WorldRealm> ReservedRealms = new Dictionary<ReservedRealm, WorldRealm>();
         private static readonly Dictionary<string, RulesetTemplate> EphemeralRealmCache = new Dictionary<string, RulesetTemplate>();
 
+        public static WorldRealm ServerBaseRealm { get; private set; }
+
         //Todo: refactor
         public static WorldRealm DuelRealm;
         
@@ -57,6 +59,7 @@ namespace ACE.Server.Managers
         {
             RealmConverter.Initialize();
 
+
             SetupReservedRealms();
            
             /* var results = DatabaseManager.World.GetAllRealms();
@@ -73,6 +76,10 @@ namespace ACE.Server.Managers
             DeveloperContentCommands.HandleImportRealms(null, null);
             if (!ImportComplete)
                 throw new Exception("Import of realms.jsonc did not complete successfully.");
+
+            var baseRealmId = PropertyManager.GetLong("server_base_realm").Item;
+
+            ServerBaseRealm = GetRealm((ushort)baseRealmId);
         }
 
         private static void SetupReservedRealms()
