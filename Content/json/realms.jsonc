@@ -4,7 +4,6 @@
   "Modern Realm": 3,
   "Modern Realm (PvP)": 4,
   "Duels Only": 5,
-  "Escape from Dereth": 6,
   "pvp-ruleset": 1000,
   "random-test": 1001,
   "creature-attribute-randomizer": 1002,
@@ -20,8 +19,5 @@
   "Max Spellcasting Angle - Wide": 1012,
   "No Movement Fizzles": 1013,
   "Increased Movement Fizzles": 1014,
-  "Reduced Projectile Accuracy": 1015,
-  "Hellgate": 1016,
-  "Town Meeting Hall": 1017,
-  "Dungeon": 1018
+  "Reduced Projectile Accuracy": 1015
 }
