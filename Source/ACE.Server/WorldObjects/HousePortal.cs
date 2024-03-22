@@ -9,6 +9,7 @@ using ACE.Entity.Enum.Properties;
 using ACE.Entity.Models;
 using ACE.Server.Entity;
 using ACE.Server.Network.GameEvent.Events;
+using ACE.Server.Managers;
 
 namespace ACE.Server.WorldObjects
 {
@@ -36,9 +37,6 @@ namespace ACE.Server.WorldObjects
 
         public override void SetLinkProperties(WorldObject wo)
         {
-            return;
-            
-            /*
             if (House == null)
             {
                 log.Warn($"[HOUSE] HousePortal.SetLinkProperties({(wo != null ? $"{wo.Name}:0x{wo.Guid}:{wo.WeenieClassId}" : "null")}): House is null for HousePortal 0x{Guid} at {Location.ToLOCString()}");
@@ -55,6 +53,8 @@ namespace ACE.Server.WorldObjects
             wo.HouseId = House.HouseId;
             wo.HouseOwner = House.HouseOwner;
             wo.HouseInstance = House.HouseInstance;
+
+            var instance = RealmManager.ServerBaseRealmInstance;
 
             if (wo.IsLinkSpot)
             {
@@ -83,14 +83,13 @@ namespace ACE.Server.WorldObjects
                     }
                 }
 
-                var destination = new Position(i.ObjCellId, new Vector3(i.OriginX, i.OriginY, i.OriginZ), new Quaternion(i.AnglesX, i.AnglesY, i.AnglesZ, i.AnglesW));
+                var destination = new Position(i.ObjCellId, new Vector3(i.OriginX, i.OriginY, i.OriginZ), new Quaternion(i.AnglesX, i.AnglesY, i.AnglesZ, i.AnglesW), instance);
 
                 wo.SetPosition(PositionType.Destination, destination);
 
                 // set portal destination directly?
                 SetPosition(PositionType.Destination, destination);
             }
-            */
         }
 
         public override ActivationResult CheckUseRequirements(WorldObject activator)

@@ -115,12 +115,14 @@ namespace ACE.Server.WorldObjects
             return houseData;
         }
 
-        public static House Load(uint houseGuid, bool isBasement = false)
+        public static House Load(uint houseGuid, ushort realmId, bool isBasement = false)
         {
             var landblock = (ushort)((houseGuid >> 12) & 0xFFFF);
+            var ruleset = RealmManager.GetRealm(realmId).StandardRules;
+            var instance = ruleset.GetDefaultInstanceID();
 
             var biota = DatabaseManager.Shard.BaseDatabase.GetBiota(houseGuid);
-            var instances = DatabaseManager.World.GetCachedInstancesByLandblock(landblock, 0);
+            var instances = DatabaseManager.World.GetCachedInstancesByLandblock(landblock, realmId);
 
             if (biota == null)
             {
@@ -140,7 +142,7 @@ namespace ACE.Server.WorldObjects
                 }
             }
 
-            var linkedHouses = WorldObjectFactory.CreateNewWorldObjects(instances, new List<ACE.Database.Models.Shard.Biota> { biota }, biota.WeenieClassId, 0, RealmManager.DefaultRuleset);
+            var linkedHouses = WorldObjectFactory.CreateNewWorldObjects(instances, new List<ACE.Database.Models.Shard.Biota> { biota }, biota.WeenieClassId, instance, ruleset);
 
             foreach (var linkedHouse in linkedHouses)
                 linkedHouse.ActivateLinks(instances, new List<ACE.Database.Models.Shard.Biota> { biota }, linkedHouses[0]);
@@ -501,16 +503,14 @@ namespace ACE.Server.WorldObjects
         {
             get
             {
-                //Not supported on AC Realms
-                return null;
 
                 //if (HouseType == ACE.Entity.Enum.HouseType.Apartment || HouseType == ACE.Entity.Enum.HouseType.Cottage)
                     //return this;
 
                 var landblock = (ushort)((RootGuid.Full >> 12) & 0xFFFF);
-
                 var landblockId = new LandblockId((uint)(landblock << 16 | 0xFFFF));
-                var isLoaded = LandblockManager.IsLoaded(landblockId, 0);
+                var instance = Location.Instance;
+                var isLoaded = LandblockManager.IsLoaded(landblockId, instance);
 
                 if (!isLoaded)
                 {
@@ -519,10 +519,10 @@ namespace ACE.Server.WorldObjects
 
                     //return _rootHouse;  // return offline copy
                     // do not cache, in case permissions have changed
-                    return Load(RootGuid.Full);
+                    return Load(RootGuid.Full, Location.RealmID);
                 }
                    
-                var loaded = LandblockManager.GetLandblock(landblockId, 0, null, false);
+                var loaded = LandblockManager.GetLandblock(landblockId, instance, null, false);
                 return loaded.GetObject(RootGuid) as House;
             }
         }
@@ -558,45 +558,43 @@ namespace ACE.Server.WorldObjects
             return storage;
         }
 
-        public static House GetHouse(uint houseGuid)
+        /*public static House GetHouse(uint houseGuid)
         {
-            // Not supported in AC Realms yet
-            return null;
+            var baseRealm = RealmManager.ServerBaseRealm;
+            var instance = baseRealm.StandardRules.GetDefaultInstanceID();
 
-            /*
             var landblock = (ushort)((houseGuid >> 12) & 0xFFFF);
 
             var landblockId = new LandblockId((uint)(landblock << 16 | 0xFFFF));
-            var isLoaded = LandblockManager.IsLoaded(landblockId);
+            var isLoaded = LandblockManager.IsLoaded(landblockId, instance);
 
             if (!isLoaded)
                 return House.Load(houseGuid);
 
-            var loaded = LandblockManager.GetLandblock(landblockId, false);
+            var loaded = LandblockManager.GetLandblock(landblockId, instance, null, false);
             return loaded.GetObject(new ObjectGuid(houseGuid)) as House;
-            */
-        }
+        }*/
 
         public House GetDungeonHouse()
         {
-            // Not supported in AC Realms yet
-            return null;
-
-            /*
             var landblockId = new LandblockId(DungeonLandblockID);
-            var isLoaded = LandblockManager.IsLoaded(landblockId);
+            var instance = Location.Instance;
+            var realmId = Location.RealmID;
+            var isLoaded = LandblockManager.IsLoaded(landblockId, instance);
 
             if (!isLoaded)
-                return House.Load(DungeonHouseGuid, true);
+                return House.Load(DungeonHouseGuid, realmId, true);
 
-            var loaded = LandblockManager.GetLandblock(landblockId, false);
+            var loaded = LandblockManager.GetLandblock(landblockId, instance, null, false);
             var wos = loaded.GetWorldObjectsForPhysicsHandling();
             return wos.FirstOrDefault(wo => wo.WeenieClassId == WeenieClassId) as House;
-            */
         }
 
         public bool OnProperty(Player player)
         {
+            if (player.Location.RealmID != Location.RealmID)
+                return false;
+
             if (Location == null)
                 return false;
 

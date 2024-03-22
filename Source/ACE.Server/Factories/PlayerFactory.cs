@@ -358,8 +358,7 @@ namespace ACE.Server.Factories
             var starterArea = DatManager.PortalDat.CharGen.StarterAreas[(int)startArea];
 
             var serverBaseRealm = RealmManager.ServerBaseRealm;
-            var instance = serverBaseRealm.StandardRules.GetDefaultInstanceID();
-
+            var instance = RealmManager.ServerBaseRealmInstance;
             player.HomeRealm = serverBaseRealm.Realm.Id;
 
             player.Location = new Position(starterArea.Locations[0].ObjCellID,
@@ -430,7 +429,7 @@ namespace ACE.Server.Factories
             if (weenie == null)
                 return null;
 
-            var worldObject = (Clothing)WorldObjectFactory.CreateNewWorldObject(weenie, RealmManager.DefaultRuleset);
+            var worldObject = (Clothing)WorldObjectFactory.CreateNewWorldObject(weenie, RealmManager.ServerBaseRealm.StandardRules);
 
             worldObject.SetProperties((int)palette, shade);
 

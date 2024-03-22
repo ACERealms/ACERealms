@@ -122,6 +122,8 @@ namespace ACE.Server.Managers
         /// </summary>
         private static void AddRentQueue(Biota slumlord)
         {
+            var location = slumlord.GetPosition(PositionType.Location);
+            var realmId = location.RealmID;
             var biotaOwner = slumlord.BiotaPropertiesIID.FirstOrDefault(i => i.Type == (ushort)PropertyInstanceId.HouseOwner);
             if (biotaOwner == null)
             {
@@ -157,7 +159,7 @@ namespace ACE.Server.Managers
                 log.Error($"[HOUSE] HouseManager.AddRentQueue(): rent queue already contains house {houseInstance}");
                 return;
             }
-            AddRentQueue(owner, houseInstance);
+            AddRentQueue(owner, houseInstance, realmId);
         }
 
         /// <summary>
@@ -171,11 +173,11 @@ namespace ACE.Server.Managers
         /// <summary>
         /// Adds a player-owned house to the rent queue
         /// </summary>
-        public static void AddRentQueue(IPlayer player, uint houseGuid)
+        public static void AddRentQueue(IPlayer player, uint houseGuid, ushort realmId)
         {
             //Console.WriteLine($"AddRentQueue({player.Name}, {houseGuid:X8})");
 
-            var house = House.Load(houseGuid);
+            var house = House.Load(houseGuid, realmId, false);
             if (house == null)      // this can happen for basement dungeons
                 return;
 
@@ -355,6 +357,7 @@ namespace ACE.Server.Managers
         /// </summary>
         private static void ProcessRent(PlayerHouse playerHouse)
         {
+            var realmId = playerHouse.RealmId;
             // load the most up-to-date copy of the house data
             GetHouse(playerHouse.House.Guid.Full, (house) =>
             {
@@ -369,7 +372,7 @@ namespace ACE.Server.Managers
                     HandleRentPaid(playerHouse);
                 else
                     HandleEviction(playerHouse);
-            });
+            }, realmId);
         }
 
         /// <summary>
@@ -424,15 +427,15 @@ namespace ACE.Server.Managers
         /// <summary>
         /// Handles the eviction process for a player house
         /// </summary>
-        private static void HandleEviction(PlayerHouse playerHouse, bool force = false)
+        private static void HandleEviction(PlayerHouse playerHouse, bool force = false, bool realmEviction = false)
         {
-            HandleEviction(playerHouse.House, playerHouse.PlayerGuid, false, force);
+            HandleEviction(playerHouse.House, playerHouse.PlayerGuid, false, force, realmEviction);
         }
 
         /// <summary>
         /// Handles the eviction process for a player house
         /// </summary>
-        public static void HandleEviction(House house, uint playerGuid, bool multihouse = false, bool force = false)
+        public static void HandleEviction(House house, uint playerGuid, bool multihouse = false, bool force = false, bool realmEviction = false)
         {
             // clear out slumlord inventory
             var slumlord = house.SlumLord;
@@ -452,6 +455,15 @@ namespace ACE.Server.Managers
                 // re-add item to queue
                 AddRentQueue(player, house);
                 return;
+            }
+
+            // if this is a realm eviction, clear out storage
+            if (realmEviction)
+            {
+                foreach (var storage in house.Storage)
+                {
+                    storage.ClearUnmanagedInventory(true, true);
+                }
             }
 
             // handle eviction
@@ -648,7 +660,37 @@ namespace ACE.Server.Managers
                 HandleEviction(playerHouse, true);
 
                 RemoveRentQueue(house.Guid.Full);
-            });
+            }, playerHouse.RealmId);
+        }
+        public static void HandleSeasonalRealmChange()
+        {
+            var players = PlayerManager.GetAllPlayers();
+            var instance = RealmManager.ServerBaseRealmInstance;
+
+            foreach(var player in players)
+            {
+                var playerGuid = player.Guid.Full;
+
+                if (player.HouseInstance == null)
+                    continue;
+
+                var playerHouse = FindPlayerHouse(playerGuid);
+                if (playerHouse == null)
+                    continue;
+
+                // load the most up-to-date copy of house data
+                GetHouse(playerHouse.House.Guid.Full, (house) =>
+                {
+                    playerHouse.House = house;
+
+                    HandleEviction(playerHouse, true, true);
+
+                    RemoveRentQueue(house.Guid.Full);
+
+                }, playerHouse.RealmId);
+            }
+
+            RealmManager.HandleUpdateServerBaseRealm();
         }
 
         /// <summary>
@@ -698,22 +740,20 @@ namespace ACE.Server.Managers
         /// else return a copy of the House biota from the latest info in the db
         ///
         /// <param name="callback">called when the slumlord inventory is fully loaded</param>
-        public static void GetHouse(uint houseGuid, Action<House> callback)
+        public static void GetHouse(uint houseGuid, Action<House> callback, ushort realmId)
         {
-            // Not supported yet on AC Realms
-            return;
-
-            /*
+            var realm = RealmManager.GetRealm(realmId);
+            var instance = realm.StandardRules.GetDefaultInstanceID();
             var landblock = (ushort)((houseGuid >> 12) & 0xFFFF);
 
             var landblockId = new LandblockId((uint)(landblock << 16 | 0xFFFF));
-            var isLoaded = LandblockManager.IsLoaded(landblockId);
+            var isLoaded = LandblockManager.IsLoaded(landblockId, instance);
 
             if (!isLoaded)
             {
                 // landblock is unloaded
                 // return a copy of the House biota from the latest info in the db
-                var houseBiota = House.Load(houseGuid);
+                var houseBiota = House.Load(houseGuid, realmId);
 
                 RegisterCallback(houseBiota, callback);
 
@@ -721,7 +761,7 @@ namespace ACE.Server.Managers
             }
 
             // landblock is loaded, return a reference to the current House object
-            var loaded = LandblockManager.GetLandblock(landblockId, false);
+            var loaded = LandblockManager.GetLandblock(landblockId, instance, null, false);
             var house = loaded.GetObject(new ObjectGuid(houseGuid)) as House;
 
             if (house != null && house.SlumLord != null)
@@ -733,13 +773,12 @@ namespace ACE.Server.Managers
             }
             else if (!loaded.CreateWorldObjectsCompleted)
             {
-                var houseBiota = House.Load(houseGuid);
+                var houseBiota = House.Load(houseGuid, realmId);
 
                 RegisterCallback(houseBiota, callback);
             }
             else
                 log.Error($"HouseManager.GetHouse({houseGuid:X8}): couldn't find house on loaded landblock");
-            */
         }
 
         /// <summary>
@@ -892,7 +931,7 @@ namespace ACE.Server.Managers
 
                     log.Debug($"[HOUSE] HouseManager.PayRent({house.Guid}): fully paid rent into SlumLord.");
                 }
-            });
+            }, playerHouse.RealmId);
         }
 
         /// <summary>

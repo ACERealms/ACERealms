@@ -665,7 +665,7 @@ namespace ACE.Server.WorldObjects
                 // boot anyone who may have been wandering around inside...
                 HandleActionBootAll(false);
 
-                HouseManager.AddRentQueue(this, house.Guid.Full);
+                HouseManager.AddRentQueue(this, house.Guid.Full, Location.RealmID);
                 slumlord.ActOnUse(this);
             });
             actionChain.EnqueueChain();
@@ -915,7 +915,7 @@ namespace ACE.Server.WorldObjects
             {
                 var houseData = house.GetHouseData(houseOwner);
                 Session.Network.EnqueueSend(new GameEventHouseData(Session, houseData));
-            });
+            }, Location.RealmID);
         }
 
         public House LoadHouse(uint? houseInstance, bool forceLoad = false)
@@ -926,7 +926,7 @@ namespace ACE.Server.WorldObjects
             if (houseInstance == null)
                 return House;
 
-            House = House.Load(houseInstance.Value);
+            House = House.Load(houseInstance.Value, Location.RealmID);
 
             return House;
         }
@@ -940,10 +940,7 @@ namespace ACE.Server.WorldObjects
 
         public House GetHouse(uint? houseInstance)
         {
-            // Not supported yet on AC Realms
-            return null;
-
-            /*
+            var instance = Location.Instance;
             if (houseInstance == null)
                 return null;
 
@@ -951,13 +948,13 @@ namespace ACE.Server.WorldObjects
             var landblock = (ushort)((houseGuid >> 12) & 0xFFFF);
 
             var landblockId = new LandblockId((uint)(landblock << 16 | 0xFFFF));
-            var isLoaded = LandblockManager.IsLoaded(landblockId);
+            var isLoaded = LandblockManager.IsLoaded(landblockId, instance);
 
             if (!isLoaded)
-                return House = House.Load(houseGuid);
+                return House = House.Load(houseGuid, Location.RealmID);
 
-            var loaded = LandblockManager.GetLandblock(landblockId, false);
-            return House = loaded.GetObject(new ObjectGuid(houseGuid)) as House;*/
+            var loaded = LandblockManager.GetLandblock(landblockId, instance, null, false);
+            return House = loaded.GetObject(new ObjectGuid(houseGuid)) as House;
         }
 
         public void HandleActionAddGuest(string guestName)

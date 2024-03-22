@@ -140,7 +140,10 @@ namespace ACE.Server.WorldObjects
                     Session.Network.EnqueueSend(new GameEventWeenieError(Session, WeenieError.YouHaveMovedTooFar));
                     return;
                 }
-                Teleport(house.SlumLord.Location);
+                var instance = Location.Instance;
+                var newLocation = new Position(house.SlumLord.Location);
+                newLocation.Instance = instance;
+                Teleport(newLocation);
             });
 
             actionChain.EnqueueChain();

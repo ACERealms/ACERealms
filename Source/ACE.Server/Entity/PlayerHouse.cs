@@ -9,6 +9,7 @@ namespace ACE.Server.Entity
         public uint PlayerGuid;
         public string PlayerName;
         public House House;
+        public ushort RealmId;
         public DateTime RentDue;
 
         public PlayerHouse(IPlayer player, House house)
@@ -22,6 +23,8 @@ namespace ACE.Server.Entity
             PlayerName = player.Name;
 
             House = house;
+
+            RealmId = house.Location.RealmID;
 
             RentDue = DateTimeOffset.FromUnixTimeSeconds(player.HouseRentTimestamp.Value).UtcDateTime;
         }
