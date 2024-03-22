@@ -17,6 +17,70 @@ namespace ACE.Server.Command.Handlers
 {
     public static class CustomCommands
     {
+        [CommandHandler("change-season", AccessLevel.Admin, CommandHandlerFlag.None, 1, "Updates the season for the server by providing a new realmId from `Content/json/realms.jsonc`", "change-season <realmId>")]
+        public static void HandleChangeSeason(Session session, params string[] paramters)
+        {
+            try
+            {
+                var longVal = long.Parse(paramters[0]);
+
+                var realm = RealmManager.GetRealm((ushort)longVal);
+
+                if (realm == null)
+                {
+                    CommandHandlerHelper.WriteOutputInfo(session, $"RealmId: {longVal} does not exist, please provide a valid realmId from `Content/json/realms.jsonc`, type: /season-list for a list of available seasons to choose from.");
+                    return;
+                }
+
+                if (longVal != RealmManager.ServerBaseRealm.Realm.Id)
+                {
+                     var modifyParams = new string[] { "server_base_realm", paramters[0] };
+                    AdminCommands.HandleModifyServerLongProperty(session, modifyParams);
+                    var message = $"The season has changed to {RealmManager.ServerBaseRealm.Realm.Name}";
+                    PlayerManager.BroadcastToAuditChannel(session?.Player, message);
+                    PlayerManager.BroadcastToAll(new GameMessageSystemChat(message, ChatMessageType.WorldBroadcast));
+                } else
+
+                    CommandHandlerHelper.WriteOutputInfo(session, $"RealmId: {longVal} is already applied, Please input a new RealmId", ChatMessageType.Help);
+            }
+            catch (Exception)
+            {
+                CommandHandlerHelper.WriteOutputInfo(session, "Please input a valid long", ChatMessageType.Help);
+            }
+        }
+
+        [CommandHandler("season-info", AccessLevel.Player, CommandHandlerFlag.RequiresWorld, 0, "Get info about the current season your character belongs to.")]
+        public static void HandleSeasonInfo(Session session, params string[] paramters)
+        {
+            var player  = session?.Player;
+            var playerRealm = RealmManager.GetRealm(player.HomeRealm);
+            
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n<Season Information>", ChatMessageType.System));
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n{playerRealm.Realm.Name} - Id: {playerRealm.Realm.Id} - Instance: {playerRealm.StandardRules.GetDefaultInstanceID()}", ChatMessageType.System));
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n{playerRealm.StandardRules.DebugOutputString()}", ChatMessageType.System));
+        }
+
+        [CommandHandler("season-list", AccessLevel.Player, CommandHandlerFlag.None, 0, "Get a list of available seasons to choose from.")]
+        public static void HandleSeasonList(Session session, params string[] paramters)
+        {
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n<Season List>", ChatMessageType.System));
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n{RealmManager.GetSeasonList()}", ChatMessageType.System));
+        }
+
+        [CommandHandler("realm-list", AccessLevel.Player, CommandHandlerFlag.None, 0, "Get a list of available realms stored in RealmManager.")]
+        public static void HandleRealmList(Session session, params string[] paramters)
+        {
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n<Realm List>", ChatMessageType.System));
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n{RealmManager.GetRealmList()}", ChatMessageType.System));
+        }
+
+        [CommandHandler("ruleset-list", AccessLevel.Player, CommandHandlerFlag.None, 0, "Get a list of available rulesets stored in RealmManager.")]
+        public static void HandleRulesetList(Session session, params string[] paramters)
+        {
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n<Ruleset List>", ChatMessageType.System));
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n{RealmManager.GetRulesetsList()}", ChatMessageType.System));
+        }
+
         [CommandHandler("telerealm", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, 0, "Teleports the current player to another realm.")]
         public static void HandleMoveRealm(Session session, params string[] parameters)
         {
@@ -34,9 +98,11 @@ namespace ACE.Server.Command.Handlers
             session.Network.EnqueueSend(positionMessage);
         }
 
-        [CommandHandler("zoneinfo", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Lists all properties for the current realm.")]
+        [CommandHandler("realm-info", AccessLevel.Developer, CommandHandlerFlag.RequiresWorld, "Lists all properties for the current realm.")]
         public static void HandleZoneInfo(Session session, params string[] parameters)
         {
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n<Realm Information>", ChatMessageType.System));
+            session.Network.EnqueueSend(new GameMessageSystemChat($"\n{session.Player.CurrentLandblock.RealmRuleset.Realm.Name} - Id: {session.Player.CurrentLandblock.RealmRuleset.Realm.Id} - Instance: {session.Player.CurrentLandblock.RealmRuleset.GetDefaultInstanceID()} ", ChatMessageType.System));
             session.Network.EnqueueSend(new GameMessageSystemChat($"\n{session.Player.CurrentLandblock.RealmRuleset.DebugOutputString()}", ChatMessageType.System));
         }
 

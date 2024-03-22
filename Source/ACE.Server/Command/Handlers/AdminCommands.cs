@@ -1483,6 +1483,7 @@ namespace ACE.Server.Command.Handlers
 
         private static void DumpHouse(Session session, House targetHouse, WorldObject wo)
         {
+            var realmId = wo.Location.RealmID;
             HouseManager.GetHouse(targetHouse.Guid.Full, (house) =>
             {
                 var msg = "";
@@ -1633,7 +1634,7 @@ namespace ACE.Server.Command.Handlers
                     }
                 }
                 session.Player.SendMessage(msg, ChatMessageType.System);
-            });
+            }, realmId);
         }
 
         private static House GetSelectedHouse(Session session, out WorldObject target)
@@ -4352,10 +4353,26 @@ namespace ACE.Server.Command.Handlers
             try
             {
                 var longVal = long.Parse(paramters[1]);
+
+                var realm = RealmManager.GetRealm((ushort)longVal);
+
+                if (paramters[0] == "server_base_realm" && realm == null)
+                {
+                    CommandHandlerHelper.WriteOutputInfo(session, $"RealmId: {longVal} does not exist, please provide a valid realmId from `Content/json/realms.jsonc`");
+                    return;
+                }
+
                 if (PropertyManager.ModifyLong(paramters[0], longVal))
                 {
                     CommandHandlerHelper.WriteOutputInfo(session, "Long property successfully updated!");
                     PlayerManager.BroadcastToAuditChannel(session?.Player, $"Successfully changed server long property {paramters[0]} to {longVal}");
+
+                    if (paramters[0] == "server_base_realm")
+                    {
+                        //HouseManager.HandleSeasonalRealmChange();
+                        RealmManager.HandleUpdateServerBaseRealm();
+
+                    }
                 }
                 else
                     CommandHandlerHelper.WriteOutputInfo(session, "Unknown long property was not updated. Type showprops for a list of properties.");

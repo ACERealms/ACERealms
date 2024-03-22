@@ -37,12 +37,21 @@ namespace ACE.Server.Managers
 
         //Todo: refactor
         public static WorldRealm DuelRealm;
-        
+
         private static List<ushort> RealmIDsByTopologicalSort;
 
         private static bool ImportComplete;
 
         private static WorldRealm _defaultRealm;
+
+        public static uint ServerBaseRealmInstance
+        {
+            get
+            {
+                return ServerBaseRealm.StandardRules.GetDefaultInstanceID();
+            }
+        }
+
         public static WorldRealm DefaultRealm
         {
             get { return _defaultRealm; }
@@ -77,9 +86,66 @@ namespace ACE.Server.Managers
             if (!ImportComplete)
                 throw new Exception("Import of realms.jsonc did not complete successfully.");
 
+            HandleUpdateServerBaseRealm();
+
+            log.Info($"The current ServerBaseRealm is {ServerBaseRealm.Realm.Id} - {ServerBaseRealm.Realm.Id}");
+            log.Info($"The current ServerBaseRealmInstance is {ServerBaseRealmInstance}");
+        }
+
+        public static void HandleUpdateServerBaseRealm()
+        {
             var baseRealmId = PropertyManager.GetLong("server_base_realm").Item;
 
             ServerBaseRealm = GetRealm((ushort)baseRealmId);
+        }
+
+        public static string GetRealmList()
+        {
+            var sb = new StringBuilder();
+
+            foreach (var realm in Realms)
+            {
+                sb.AppendLine($"{realm.Realm.Id} : {realm.Realm.Name}");
+            }
+
+            sb.AppendLine("\n");
+
+            return sb.ToString().Replace("\r", "");
+        }
+
+        public static string GetSeasonList()
+        {
+            var sb = new StringBuilder();
+
+            foreach (var realm in Realms)
+            {
+                if (realm.Realm.Id > 0 && realm.Realm.Id < 1000)
+                {
+
+                    if (ServerBaseRealm.Realm.Id == realm.Realm.Id)
+                        sb.AppendLine($"{realm.Realm.Id} : {realm.Realm.Name} - <Active>");
+                    else 
+                        sb.AppendLine($"{realm.Realm.Id} : {realm.Realm.Name}");
+                }
+            }
+
+            sb.AppendLine("\n");
+
+            return sb.ToString().Replace("\r", "");
+        }
+
+        public static string GetRulesetsList()
+        {
+            var sb = new StringBuilder();
+
+            foreach (var realm in Rulesets)
+            {
+                sb.AppendLine($"{realm.Realm.Id} : {realm.Realm.Name}");
+            }
+
+            sb.AppendLine("\n");
+
+            return sb.ToString().Replace("\r", "");
         }
 
         private static void SetupReservedRealms()
