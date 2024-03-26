@@ -457,15 +457,6 @@ namespace ACE.Server.Managers
                 return;
             }
 
-            // if this is a realm eviction, clear out storage
-            if (realmEviction)
-            {
-                foreach (var storage in house.Storage)
-                {
-                    storage.ClearUnmanagedInventory(true, true);
-                }
-            }
-
             // handle eviction
             house.HouseOwner = null;
             house.MonarchId = null;
@@ -689,6 +680,11 @@ namespace ACE.Server.Managers
 
                 }, playerHouse.RealmId);
             }
+
+            var biotas = DatabaseManager.Shard.BaseDatabase.GetBiotasByType(WeenieType.Storage);
+            var ids = biotas.Select(r => r.Id).ToList();
+
+            DatabaseManager.Shard.BaseDatabase.RemoveBiotasInParallel(ids);
 
             RealmManager.HandleUpdateServerBaseRealm();
         }

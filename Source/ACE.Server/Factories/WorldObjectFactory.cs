@@ -277,6 +277,8 @@ namespace ACE.Server.Factories
         /// </summary>
         public static List<WorldObject> CreateNewWorldObjects(List<LandblockInstance> sourceObjects, List<Biota> biotas, uint? restrict_wcid, uint iid, AppliedRuleset ruleset)
         {
+            var disableHousing = ruleset.Realm.Id != RealmManager.ServerBaseRealm.Realm.Id;
+
             var results = new List<WorldObject>();
 
             // spawn direct landblock objects
@@ -302,11 +304,24 @@ namespace ACE.Server.Factories
                 {
                     worldObject = CreateWorldObject(weenie, guid, ruleset);
 
+                    if (disableHousing && worldObject is House || worldObject is Storage || worldObject is Hook || worldObject is Hooker || worldObject is HousePortal || worldObject is SlumLord)
+                    {
+                        worldObject.Destroy();
+                        worldObject = null;
+                        continue;
+                    }
+
                     worldObject.Location = new Position(instance.ObjCellId, instance.OriginX, instance.OriginY, instance.OriginZ, instance.AnglesX, instance.AnglesY, instance.AnglesZ, instance.AnglesW, iid);
                 }
                 else
                 {
                     worldObject = CreateWorldObject(biota);
+
+                    if (disableHousing && worldObject is House || worldObject is Storage || worldObject is Hook || worldObject is Hooker || worldObject is HousePortal || worldObject is SlumLord)
+                    {
+                        worldObject = null;
+                        continue;
+                    }
 
                     if (worldObject.Location == null)
                     {

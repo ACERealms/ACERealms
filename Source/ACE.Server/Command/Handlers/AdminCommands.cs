@@ -4369,8 +4369,9 @@ namespace ACE.Server.Command.Handlers
 
                     if (paramters[0] == "server_base_realm")
                     {
-                        //HouseManager.HandleSeasonalRealmChange();
-                        RealmManager.HandleUpdateServerBaseRealm();
+                        WorldManager.Close(null, true);
+                        HouseManager.HandleSeasonalRealmChange();
+                        AdminShardCommands.ShutdownServerNow(session);
 
                     }
                 }

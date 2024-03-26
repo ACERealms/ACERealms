@@ -1402,9 +1402,17 @@ namespace ACE.Server.WorldObjects
             if (CurrentLandblock == null || IgnoreHouseBarriers)
                 return false;
 
+
             foreach (var house in CurrentLandblock.Houses)
             {
                 var rootHouse = house.RootHouse;
+
+                // If realm season has changed, housing WorldObjects may not be created in previous seasons, players in basement must be removed.
+                if (rootHouse == null)
+                {
+                    Teleport(Sanctuary);
+                    return true;
+                }
 
                 if (!rootHouse.OnProperty(this))
                     continue;
