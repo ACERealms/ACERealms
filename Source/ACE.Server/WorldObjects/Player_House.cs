@@ -1345,7 +1345,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            var house = allegianceHouse ? Allegiance.GetHouse() : GetHouse();
+            var house = allegianceHouse ? Allegiance.GetHouse(Location) : GetHouse();
             var player = PlayerManager.GetOnlinePlayer(playerName);
 
             if (player == null)
@@ -1606,7 +1606,7 @@ namespace ACE.Server.WorldObjects
                 return;
             }
 
-            var allegianceHouse = Allegiance.GetHouse();
+            var allegianceHouse = Allegiance.GetHouse(Location);
 
             if (allegianceHouse == null)
             {

@@ -282,10 +282,10 @@ namespace ACE.Server.WorldObjects
 
         public bool HasCustomTitles => AllegianceSpeakerTitle != null || AllegianceSeneschalTitle != null || AllegianceCastellanTitle != null;
 
-        public House GetHouse()
+        public House GetHouse(Position location)
         {
-            var realmId = Location.RealmID;
-            var instance = Location.Instance;
+            var realmId = location.RealmID;
+            var instance = location.Instance;
 
             if (Monarch.Player.HouseInstance == null)
                 return null;

@@ -521,7 +521,7 @@ namespace ACE.Server.WorldObjects
                 return null;
             }
 
-            var allegianceHouse = Allegiance.GetHouse();
+            var allegianceHouse = Allegiance.GetHouse(Location);
 
             if (allegianceHouse == null)
             {
