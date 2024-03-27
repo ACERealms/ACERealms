@@ -1,41 +1,81 @@
-# ACEmulator Core Server
+# SeasonalACE
 
-[![Discord](https://img.shields.io/discord/261242462972936192.svg?label=play+now!&style=for-the-badge&logo=discord)](https://discord.gg/C2WzhP9)
+## Summary
 
-Build status: [![GitHub last commit (master)](https://img.shields.io/github/last-commit/acemulator/ace/master)](https://github.com/ACEmulator/ACE/commits/master) [![Windows CI](https://ci.appveyor.com/api/projects/status/rqebda31cgu8u59w/branch/master?svg=true)](https://ci.appveyor.com/project/LtRipley36706/ace/branch/master) [![docker build](https://github.com/ACEmulator/ACE/actions/workflows/docker-image.yml/badge.svg)](https://hub.docker.com/r/acemulator/ace)
+Seasonal ACE is a fork of [ACEmulator](https://github.com/ACEmulator/ACE) and  [ACRealms](https://github.com/ACRealms/ACRealms.WorldServer). It comes with instancing functionality, specifically realms, also known as "seasons". A season can be thought of as an instance of an entire AC world server, however, Seasonal ACE can support multiple seasons on a single server simultaneously. Additionally, a season also has the capability to support instance dungeon landblocks, where multiple dungeons of the same landblock can exist, with their own rules. 
 
-[![Download Latest Server Release](https://img.shields.io/github/v/release/ACEmulator/ACE?label=latest%20server%20release) ![GitHub Release Date](https://img.shields.io/github/release-date/acemulator/ace)](https://github.com/ACEmulator/ACE/releases/latest)
-[![Download Latest World Database Release](https://img.shields.io/github/v/release/ACEmulator/ACE-World-16PY-Patches?label=latest%20world%20database%20release) ![GitHub Release Date](https://img.shields.io/github/release-date/acemulator/ACE-World-16PY-Patches)](https://github.com/ACEmulator/ACE-World-16PY-Patches/releases/latest)
+This project is experimental, and exists as a base for any projects that wish to have instancing with Asheron's Call, and can be played the same as any other ACE server. 
 
-[![GitHub All Releases](https://img.shields.io/github/downloads/acemulator/ace/total?label=server%20downloads)](https://github.com/ACEmulator/ACE/releases) [![GitHub All Releases](https://img.shields.io/github/downloads/acemulator/ACE-World-16PY-Patches/total?label=database%20downloads)](https://github.com/ACEmulator/ACE-World-16PY-Patches/releases) [![Docker Pulls](https://img.shields.io/docker/pulls/acemulator/ace)](https://hub.docker.com/r/acemulator/ace)
 
-**ACEmulator is a custom, completely from-scratch open source server implementation for Asheron's Call built on C#**
- * MySQL and MariaDB are used as the database engine.
- * Latest client supported.
- * [![License](https://img.shields.io/github/license/acemulator/ace)](https://github.com/ACEmulator/ACE/blob/master/LICENSE)
+## Caveats
 
-***
-## Disclaimer
-**This project is for educational and non-commercial purposes only, use of the game client is for interoperability with the emulated server.**
-- Asheron's Call was a registered trademark of Turbine, Inc. and WB Games Inc which has since expired.
-- ACEmulator is not associated or affiliated in any way with Turbine, Inc. or WB Games Inc.
-***
-## Getting Started
-Extended documentation can be found on the project [Wiki](https://github.com/ACEmulator/ACE/wiki).
-* [Developing ACE](https://github.com/ACEmulator/ACE/wiki/ACE-Development)
-* [Hosting ACE](https://github.com/ACEmulator/ACE/wiki/ACE-Hosting)
-* [Content Creation](https://github.com/ACEmulator/ACE/wiki/Content-Creation)
+1. `LandblockInstance` entities are shared across seasons. This means all static guids belonging to a `LandblockInstance` are the same no matter which realm  your character exists in. 
+2. Because all static guids are shared, housing cannot exist in multiple seasons independently. SeasonalACE only supports housing in the current active season, past seasons that are no longer active have all housing related biotas removed and housing storage cleared (characters can still be played in past seasons, just without housing).
+3. There are still unforseen bugs. ACRealms never had much exposure and is not very battle tested but there should be no serious impact on performance or player experience. 
 
-## Contributions
-* Contributions in the form of issues and pull requests are welcomed and encouraged.
-* The preferred way to contribute is to fork the repo and submit a pull request on GitHub.
-* Code style information can be found on the [Wiki](https://github.com/ACEmulator/ACE/wiki/Code-Style).
 
-Please note that this project is released with a [Contributor Code of Conduct](https://github.com/ACEmulator/ACE/blob/master/CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
+## Custom Realm Config
+* The `Content\json\realms.jsonc` is your root config file. In this file you define key/value pairs, where the key is the name of a realm you have created (more on this next), and the value is the realm identifier that is used internally.
+* The `Content\json\realms\realm` directory is where your realm JSON files exist, these are what I would describe as your seasons. Realms have a parent/child relationship, multiple realms can inherit rules from other realms. You will find many config files that you can use as a foundation and example to learn from. 
 
-## Bug Reports
-* Please use the [issue tracker](https://github.com/ACEmulator/ACE/issues) provided by GitHub to send us bug reports.
-* You may also discuss issues and bug reports on our discord listed below.
+For example the default season for SeasonalACE is the `realms-pvp.jsonc` file:
 
-## Contact
-* [Discord Channel](https://discord.gg/C2WzhP9)
+This realm inherits from the `Modern Realm`.
+
+```json
+{
+  "name": "Modern Realm (PvP)",
+  "type": "Realm",
+  "parent": "Modern Realm",
+  "properties": {
+    "Description": "The Customized PvP Realm with the latest and greatest features.",
+    "IsPKOnly": true
+  }
+}
+```
+
+
+* The `Custom\json\realms\rulesets` directory contains rulesets config files. Rulesets should be used for dungeon landblock instancing only. Rulesets are unique as they can be composed with other rulesets, and the values for certain rules can be applied with RNG values.
+
+Here is a `random-test` ruleset example:
+
+```json
+{
+  "name": "random-test",
+  "type": "Ruleset",
+  "properties": {
+    "Description": "A test ruleset for random properties.",
+    "Spellcasting_Max_Angle": {
+      "low": "5",
+      "high": "180",
+      "reroll": "landblock" /*never, always, landblock, admin */,
+      "locked": true,
+      "probability": 0.5
+    },
+    "CreatureSpawnHPMultiplier": {
+      "low": 0.5,
+      "high": 2.0,
+      "compose": "add"
+    }
+  },
+  "apply_rulesets": ["creature-attribute-randomizer"],
+  "apply_rulesets_random": [
+    [{ "creature-hp-boost": 0.5 }, { "creature-hp-boost": 1.0 }],
+    { "pvp-ruleset": "auto" },
+    { "creature-attribute-randomizer": 0.5 }
+  ]
+}
+```
+
+## Commands
+
+**Admin Commands**
+1. `/change-season <realmId>` - This command changes the current active season to a new realmId, newly created players will be created in this season, having no physical interactions with other seasoned characters. Transitioning to a new season clears housing and housing storage from the previous active season.
+2. `/exiti` - Exits the current ephemeral realm (dungeon landblock instance).
+
+**Player Commands**
+1. `/season-info` - This command gives you information about the current active season that a player belongs to.
+2. `/season-list` - This command displays a list of all available seasons to choose from, highlighting the current active season.
+3. `/realm-list` - This command displays all realms that exist in the realms.jsonc file.
+4. `/ruleset-list` - This command displays all rulesets that exist in rulesets directory.
+5. `/realm-info` - This command displays all realm information for the current realm a player exists in (useful for dungeon landblock realms, also known as ephemeral realms).
