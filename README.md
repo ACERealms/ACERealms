@@ -1,3 +1,5 @@
+# This Repository is deprecated, with `ACRealms v2.x` SeasonalACE is no longer needed. Refer to [Pourtide](https://github.com/DarktideLegend/Pourtide) for an up-to-date fork of SeasonalACE that is a direct fork of ACRealms
+
 # SeasonalACE
 
 ## Summary
